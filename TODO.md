@@ -1,6 +1,0 @@
-- add instructions to get gguf and quants via llama.cpp repo
-- docker image to deploy the model in a basic api (currently im using lmstudio on my desktop)?
-- publish model gguf to huggingface
-- publish docker images
-- build a comprehensive docker compose (actual budget, actual budget http server, model, sms parser api service)
-- deploy on my server
