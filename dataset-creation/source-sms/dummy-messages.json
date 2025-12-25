@@ -1,0 +1,30 @@
+[
+  {
+    "subscriptionId": 1,
+    "address": "+424242424242",
+    "body": "Hello sir I m from airtel broadband Aapne broadband connection band kraya tha Airtel ka modem collect krne k regarding aap call kr rhe h plss reply ",
+    "date": 1738397567058,
+    "dateSent": 0,
+    "locked": 0,
+    "protocol": null,
+    "read": 0,
+    "status": -1,
+    "type": 1,
+    "serviceCenter": null,
+    "backupType": "sms"
+  },
+  {
+    "subscriptionId": 1,
+    "address": "TM-ICICIT",
+    "body": "INR 424.24 spent on ICICI Bank Card XX4242 on 24-Dec-24 at ZOMATO LIMITED. Avl Lmt: INR 4,24,242.42. To dispute,call 42424242/SMS BLOCK 4242 to 4242424242",
+    "date": 1701807059959,
+    "dateSent": 0,
+    "locked": 0,
+    "protocol": null,
+    "read": 1,
+    "status": -1,
+    "type": 1,
+    "serviceCenter": null,
+    "backupType": "sms"
+  }
+]

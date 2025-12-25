@@ -1,0 +1,57 @@
+services:
+  model-server:
+    image: ghcr.io/ggml-org/llama.cpp:server
+    container_name: bank-sms-model
+    ports:
+      - "1234:8080"
+    volumes:
+      - ./models:/models:ro,Z
+    command:
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "8080"
+      - "--model"
+      - "/models/functiongemma-270m-bank-sms-parser-Q4_K_M.gguf"
+      - "--ctx-size"
+      - "2048"
+      - "--threads"
+      - "4"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.sms-parser-api
+    container_name: bank-sms-api
+    # Option: Use published image instead of building locally
+    # image: kartikaybagla/bank-sms-api:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data:Z
+    userns_mode: keep-id
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=sqlite:///./data/requests.db
+      - LM_STUDIO_URL=http://model-server:8080/v1/completions
+    depends_on:
+      model-server:
+        condition: service_healthy
+    extra_hosts:
+      - "host.containers.internal:host-gateway"
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped

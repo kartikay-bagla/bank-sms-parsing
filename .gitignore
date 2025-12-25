@@ -1,0 +1,44 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Dataset creation - sensitive SMS and training data
+dataset-creation/source-sms/*.json
+!dataset-creation/source-sms/dummy-*.json
+dataset-creation/input/*.csv
+!dataset-creation/input/dummy-*.csv
+dataset-creation/output/*.jsonl
+!dataset-creation/output/dummy-*.jsonl
+
+# Fine-tuning - training data and model checkpoints
+finetune-functiongemma/data/*.jsonl
+finetune-functiongemma/data/*.json
+!finetune-functiongemma/data/dummy-*.jsonl
+!finetune-functiongemma/data/dummy-*.json
+!finetune-functiongemma/data/tools.json
+finetune-functiongemma/checkpoints/
+finetune-functiongemma/merged_model/
+finetune-functiongemma/.claude/
+
+.env
+
+# Database files with request logs (contain PII)
+*.db
+
+# Data directory (may contain sensitive files)
+data/
+
+# Log and backup files
+*.log
+*.bak
+
+# GGUF model files (too large for git)
+*.gguf
+models/*.gguf

@@ -1,0 +1,36 @@
+[project]
+name = "bank-sms-parsing"
+version = "0.1.0"
+description = "Extract and import bank transactions from SMS using fine-tuned FunctionGemma"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27.0",
+    "pandas>=2.3.3",
+    "pydantic-ai-slim[anthropic,cerebras,google,openai]>=1.38.0",
+    # deployment
+    "fastapi>=0.115.0",
+    "pydantic-settings>=2.0.0",
+    "uvicorn>=0.32.0",
+    "sqlalchemy>=2.0.0",
+    "aiosqlite>=0.19.0",  # async SQLite support
+    "psycopg[binary]>=3.1.0",  # PostgreSQL support (optional)
+    # fine-tuning (PyTorch must be installed separately - see README)
+    # "transformers>=4.40.0",
+    # "datasets>=2.18.0",
+    # "accelerate>=0.27.0",
+    # "trl>=0.8.0",
+    # "peft>=0.10.0",
+    # "evaluate>=0.4.0",
+    # "tensorboard>=2.15.0",
+    # "sentencepiece>=0.2.0",
+    # "protobuf>=4.25.0",
+]
+
+[dependency-groups]
+dev = [
+    "flake8>=7.0.0",
+    "ipykernel>=7.1.0",
+    "jupyter>=1.1.1",
+    "pandas>=2.3.3",
+]
