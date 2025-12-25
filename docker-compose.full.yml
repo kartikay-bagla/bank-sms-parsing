@@ -1,0 +1,115 @@
+# Full stack version - complete setup with Actual Budget
+# Usage: docker-compose -f docker-compose.full.yml up -d
+#
+# Services:
+#   - actual-budget: Actual Budget server (port 5006)
+#   - actual-http-api: HTTP API for Actual Budget (port 5007)
+#   - model-server: llama.cpp serving FunctionGemma (port 1234)
+#   - api: Bank SMS Parser API (port 8000)
+#
+# First time setup:
+#   1. Start actual-budget first: docker-compose -f docker-compose.full.yml up -d actual-budget
+#   2. Go to http://localhost:5006 and create your budget
+#   3. Set ACTUAL_SERVER_PASSWORD in .env.full
+#   4. Start remaining services: docker-compose -f docker-compose.full.yml up -d
+
+services:
+  # Actual Budget Server
+  actual-budget:
+    image: actualbudget/actual-server:latest
+    container_name: actual-budget
+    ports:
+      - "5006:5006"
+    volumes:
+      - actual-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5006/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # Actual Budget HTTP API wrapper
+  actual-http-api:
+    image: jhonderson/actual-http-api:latest
+    container_name: actual-http-api
+    ports:
+      - "5007:5007"
+    volumes:
+      - actual-http-api-data:/data
+    environment:
+      - ACTUAL_SERVER_URL=http://actual-budget:5006
+      - ACTUAL_SERVER_PASSWORD=${ACTUAL_SERVER_PASSWORD}
+      - API_KEY=${ACTUAL_API_KEY}
+    depends_on:
+      actual-budget:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5007/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+
+  # llama.cpp model server
+  model-server:
+    image: ghcr.io/ggml-org/llama.cpp:server
+    container_name: bank-sms-model
+    ports:
+      - "1234:8080"
+    volumes:
+      - ./models:/models:ro,Z
+    command:
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "8080"
+      - "--model"
+      - "/models/functiongemma-270m-bank-sms-parser-Q4_K_M.gguf"
+      - "--ctx-size"
+      - "2048"
+      - "--threads"
+      - "4"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  # Bank SMS Parser API
+  api:
+    image: kartikaybagla/bank-sms-api:latest
+    container_name: bank-sms-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data:Z
+    environment:
+      - DATABASE_URL=sqlite:///./data/requests.db
+      - LM_STUDIO_URL=http://model-server:8080/v1/completions
+      - ACTUAL_API_URL=http://actual-http-api:5007
+      - ACTUAL_API_KEY=${ACTUAL_API_KEY}
+      - DEFAULT_BUDGET_SYNC_ID=${DEFAULT_BUDGET_SYNC_ID}
+      - DEFAULT_ACCOUNT_ID=${DEFAULT_ACCOUNT_ID}
+      - SMS_API_KEY=${SMS_API_KEY:-}
+      - DISABLE_ACTUAL_BUDGET=${DISABLE_ACTUAL_BUDGET:-false}
+    depends_on:
+      model-server:
+        condition: service_healthy
+      actual-http-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  actual-data:
+  actual-http-api-data:

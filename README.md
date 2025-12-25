@@ -31,9 +31,17 @@ SMS Messages (JSON export)
 | [finetune-functiongemma](./finetune-functiongemma) | Fine-tune FunctionGemma for transaction extraction |
 | [sms-parser-api](./sms-parser-api) | FastAPI server to process SMS and import to Actual Budget |
 
-## Quick Start with Docker
+## Docker Compose Options
 
-The easiest way to run the project is with Docker Compose:
+Three docker-compose configurations are available:
+
+| File | Description | Use Case |
+|------|-------------|----------|
+| `docker-compose.yml` | Builds API locally | Development, customization |
+| `docker-compose.dockerhub.yml` | Pulls pre-built image | Quick setup, production |
+| `docker-compose.full.yml` | Complete stack with Actual Budget | Self-hosted everything |
+
+### Quick Start (Pre-built Image)
 
 ```bash
 # 1. Download the model from HuggingFace
@@ -41,31 +49,64 @@ huggingface-cli download kartikaybagla/functiongemma-bank-sms-parser \
     functiongemma-270m-bank-sms-parser-Q4_K_M.gguf \
     --local-dir ./models
 
-# 2. Copy and configure environment
+# 2. Configure environment
 cp .env.example .env
 # Edit .env with your Actual Budget API settings
 
 # 3. Start services
-docker-compose up -d
+docker-compose -f docker-compose.dockerhub.yml up -d
 ```
 
-The API will be available at `http://localhost:8000`.
+API available at `http://localhost:8000`
 
-### Using the Published Docker Image
+### Full Stack (Self-Hosted Actual Budget)
 
-Instead of building locally, you can use the published image from Docker Hub:
+Complete setup with Actual Budget, HTTP API, model server, and SMS parser:
 
 ```bash
-docker pull kartikaybagla/bank-sms-api:latest
+# 1. Download the model
+huggingface-cli download kartikaybagla/functiongemma-bank-sms-parser \
+    functiongemma-270m-bank-sms-parser-Q4_K_M.gguf \
+    --local-dir ./models
+
+# 2. Start Actual Budget first
+docker-compose -f docker-compose.full.yml up -d actual-budget
+
+# 3. Go to http://localhost:5006 and set up your budget
+#    - Create a password
+#    - Create/import a budget
+#    - Note down your budget sync ID
+
+# 4. Configure environment
+cp .env.full.example .env.full
+# Edit .env.full:
+#   - ACTUAL_SERVER_PASSWORD: password you just created
+#   - ACTUAL_API_KEY: generate with `openssl rand -hex 32`
+#   - DEFAULT_BUDGET_SYNC_ID: from Actual Budget settings
+#   - DEFAULT_ACCOUNT_ID: account to import transactions to
+
+# 5. Start all services
+docker-compose -f docker-compose.full.yml --env-file .env.full up -d
 ```
 
-Or edit `docker-compose.yml` to uncomment the `image:` line under the `api` service.
+Services:
+- Actual Budget: `http://localhost:5006`
+- Actual HTTP API: `http://localhost:5007` (docs at `/api-docs/`)
+- Model Server: `http://localhost:1234`
+- SMS Parser API: `http://localhost:8000`
+
+### Local Build (Development)
+
+```bash
+# Build and run from source
+docker-compose up -d
+```
 
 ## Requirements (Development)
 
 - Python 3.11+
 - [uv](https://github.com/astral-sh/uv) package manager
-- PyTorch (for fine-tuning only - requires manual installation)
+- PyTorch (for fine-tuning only)
 
 ## Development Setup
 
@@ -84,8 +125,6 @@ uv run uvicorn main:app --reload
 
 ### PyTorch for Fine-tuning
 
-PyTorch requires platform-specific installation:
-
 ```bash
 # NVIDIA (CUDA 11.8):
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
@@ -100,3 +139,5 @@ See [finetune-functiongemma/README.md](./finetune-functiongemma/README.md) for t
 
 - [Model on HuggingFace](https://huggingface.co/kartikaybagla/functiongemma-bank-sms-parser)
 - [Docker Image on Docker Hub](https://hub.docker.com/r/kartikaybagla/bank-sms-api)
+- [Actual Budget](https://actualbudget.org/)
+- [Actual HTTP API](https://github.com/jhonderson/actual-http-api)

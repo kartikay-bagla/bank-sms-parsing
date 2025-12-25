@@ -1,5 +1,5 @@
-# Local build version - builds the API from source
-# Usage: docker-compose up -d
+# Docker Hub version - pulls pre-built API image
+# Usage: docker-compose -f docker-compose.dockerhub.yml up -d
 
 services:
   model-server:
@@ -29,15 +29,12 @@ services:
     restart: unless-stopped
 
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile.sms-parser-api
+    image: kartikaybagla/bank-sms-api:latest
     container_name: bank-sms-api
     ports:
       - "8000:8000"
     volumes:
       - ./data:/app/data:Z
-    userns_mode: keep-id
     env_file:
       - .env
     environment:
